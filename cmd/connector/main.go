@@ -27,8 +27,9 @@ func main() {
 		log.Fatalf("postgres connection failed: %v", err)
 	}
 	db := sql.OpenDB(connector)
+	defer db.Close()
+
 	if err = db.Ping(); err != nil {
 		log.Fatalf("postgres ping failed: %v", err)
 	}
-	db.Close()
 }

@@ -1,12 +1,13 @@
-// Package open helps to test TCP keepalive support when pq.Open is called directly.
+// Package sqlopen helps to test TCP keepalive support when lib/pq is used with sql.Open.
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
 
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -20,16 +21,14 @@ func main() {
 	)
 	flag.Parse()
 
-	dsn := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s connect_timeout=3 application_name=testopen keepalives_interval=%d sslmode=disable binary_parameters=yes", *pgHost, *pgPort, *pgDatabase, *pgUser, *pgPassword, *pgKeepAlive)
-	c, err := pq.Open(dsn)
+	dsn := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s connect_timeout=3 application_name=testsqlopen keepalives_interval=%d sslmode=disable binary_parameters=yes", *pgHost, *pgPort, *pgDatabase, *pgUser, *pgPassword, *pgKeepAlive)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("postgres connection failed: %v", err)
 	}
-	defer c.Close()
+	defer db.Close()
 
-	txn, err := c.Begin()
-	if err != nil {
-		log.Fatalf("postgres query failed: %v", err)
+	if err = db.Ping(); err != nil {
+		log.Fatalf("postgres ping failed: %v", err)
 	}
-	txn.Rollback()
 }
